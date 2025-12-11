@@ -131,14 +131,50 @@
     const next = document.getElementById('next');
 
     function showNext(){
-      // Exibe a "próxima página" localmente (sem redirecionar)
-      panel.style.transition = 'opacity 220ms ease, transform 220ms ease';
-      panel.style.opacity = 0;panel.style.transform='translateY(-8px)';
-      setTimeout(()=>{panel.style.display='none';next.style.display='flex';},240);
+      // Fade out lento (4.5s) do campo; depois mostra tela preta com partículas ao fundo e a frase
+      const fadeDuration = 4500; // ms (4.5s)
+      panel.style.transition = `opacity ${fadeDuration}ms ease, transform ${fadeDuration}ms ease`;
+      panel.style.opacity = 0;
+      panel.style.transform = 'translateY(-20px)';
+
+      setTimeout(()=>{
+        // esconder o painel de input
+        panel.style.display = 'none';
+
+        // criar elemento final que mostra a frase sobre uma tela preta translúcida
+        const final = document.createElement('div');
+        final.id = 'finalMessage';
+        Object.assign(final.style, {
+          position: 'fixed',
+          left: '0', top: '0', right: '0', bottom: '0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+          pointerEvents: 'none',
+          fontFamily: 'inherit',
+          color: '#bfbfbf',
+          fontSize: '34px',
+          textAlign: 'center',
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(1px)'
+        });
+
+        final.textContent = 'Relembre, me liberte';
+        document.body.appendChild(final);
+
+        // após alguns segundos na tela, redirecionar para Spiralum.html
+        const redirectDelay = 2000; // ms após a mensagem aparecer
+        setTimeout(()=>{
+          window.location.href = 'Spiralum.html';
+        }, redirectDelay);
+
+        // deixar a mensagem ali — se quiser que suma automaticamente, podemos adicionar um timeout
+      }, fadeDuration);
     }
 
     function triggerFail(){
-      // overlay agora usa imagem externa (substitua por img/rosto.png)
+      // overlay agora usa imagem externa (substitua por img/corpse.png)
       const overlay = document.createElement('div');overlay.className='fail-overlay';
       overlay.innerHTML = `
         <img src="img/corpse.png" alt="rosto vermelho" style="width:70vh;max-width:800px;opacity:0.95;filter:contrast(1.4) saturate(1.6) drop-shadow(0 12px 40px rgba(120,0,0,0.6));"/>
@@ -150,7 +186,7 @@
       document.body.style.transition='filter .2s ease, background .15s ease';
       document.body.style.filter='grayscale(0) contrast(1.4) saturate(1.6)';
 
-      // tocar arquivo de áudio externo (substitua por audio/erro.mp3)
+      // tocar arquivo de áudio externo (substitua por audio/BLINK.mp3)
       try{
         const audio = new Audio('audio/BLINK.mp3');
         audio.volume = 1.0;
