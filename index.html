@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Zona do Juramento — Entrada</title>
+  <!-- Fonte gótica (fallbacks incluídos) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     /* Reinício de estilos básicos */
     *{box-sizing:border-box;margin:0;padding:0}
@@ -11,7 +13,7 @@
     body{
       background:#000;
       color:#bfbfbf; /* cinza, nunca branco */
-      font-family: "Helvetica Neue", Arial, sans-serif;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       overflow:hidden;
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
@@ -39,20 +41,13 @@
       display:flex;align-items:center;justify-content:center;flex-direction:column;
     }
 
-    .hint{color:#9e9e9e;margin-bottom:18px;font-size:14px}
-
     form{width:100%;display:flex;gap:12px;align-items:center;justify-content:center}
     input[type="text"]{
-      width:100%;max-width:560px;padding:14px 18px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);
-      background:rgba(0,0,0,0.45);color:#cfcfcf;font-size:16px;outline:none;text-align:center;
-      transition:all .12s ease-in-out;font-family:inherit
+      width:100%;max-width:720px;padding:14px 18px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);
+      background:rgba(0,0,0,0.45);color:#cfcfcf;font-size:18px;outline:none;text-align:center;
+      transition:all .12s ease-in-out;font-family: 'Cormorant Garamond', Georgia, serif;letter-spacing:0.6px;font-weight:300
     }
     input[type="text"]::placeholder{color:#8f8f8f}
-    button{
-      padding:12px 18px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);
-      background:rgba(255,255,255,0.02);color:#d3d3d3;cursor:pointer;font-weight:600
-    }
-    button:active{transform:translateY(1px)}
 
     /* Próxima página (inicialmente oculta) */
     .next-page{display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px}
@@ -76,12 +71,15 @@
 
     /* Camada vermelha exibida no erro */
     .fail-overlay{position:fixed;inset:0;background:rgba(120,0,0,0.96);z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column}
-    .fail-overlay svg{width:48vh;max-width:680px;opacity:0.95;filter:contrast(1.4) saturate(1.6) drop-shadow(0 12px 40px rgba(120,0,0,0.6))}
+    .fail-overlay img{width:48vh;max-width:680px;opacity:0.95;filter:contrast(1.4) saturate(1.6) drop-shadow(0 12px 40px rgba(120,0,0,0.6))}
 
     /* Aparência da página 404 */
     .dead{background:#0f0000;color:#ffb3b3;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;flex-direction:column}
     .dead h1{font-size:72px;letter-spacing:6px}
     .dead p{margin-top:12px;color:#ffdede}
+
+    /* Tela final de frase */
+    #finalMessage{font-family: 'Cormorant Garamond', Georgia, serif; font-size:34px; color:#bfbfbf; font-weight:300}
 
     /* Acessibilidade: reduzir movimento */
     @media (prefers-reduced-motion: reduce){*{animation:none!important}}
@@ -97,13 +95,9 @@
 
   <div class="scene scanlines" id="scene" style="z-index:3">
     <div class="panel" id="panel">
-      <div class="hint">Digite a senha para prosseguir</div>
       <form id="pwform" autocomplete="off" onsubmit="return false;">
-        <input id="pw" type="text" placeholder="_ under oath..." aria-label="senha" />
-        <button id="enter">Entrar</button>
+        <input id="pw" type="text" placeholder="// ??? //" aria-label="senha" />
       </form>
-      <div style="height:6px"></div>
-      <div style="font-size:12px;color:#9a9a9a;opacity:0.9">A estética é intencionalmente degradada.</div>
     </div>
 
     <div class="next-page" id="next">
@@ -126,9 +120,23 @@
     const expected = normalizeText('sob o juramento do todo sombrio');
 
     const pwInput = document.getElementById('pw');
-    const enterBtn = document.getElementById('enter');
     const panel = document.getElementById('panel');
     const next = document.getElementById('next');
+    const form = document.getElementById('pwform');
+
+    function checkPassword(){
+      const v = normalizeText(pwInput.value || '');
+      if(v === expected){
+        showNext();
+      }else{
+        triggerFail();
+      }
+    }
+
+    form.addEventListener('submit',(e)=>{ e.preventDefault(); checkPassword(); });
+
+    // garantir suporte a Enter em mobile e desktop
+    pwInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.keyCode === 13){ e.preventDefault(); checkPassword(); } });
 
     function showNext(){
       // Fade out lento (4.5s) do campo; depois mostra tela preta com partículas ao fundo e a frase
@@ -169,19 +177,17 @@
           window.location.href = 'Spiralum.html';
         }, redirectDelay);
 
-        // deixar a mensagem ali — se quiser que suma automaticamente, podemos adicionar um timeout
       }, fadeDuration);
     }
 
     function triggerFail(){
       // overlay agora usa imagem externa (substitua por img/corpse.png)
       const overlay = document.createElement('div');overlay.className='fail-overlay';
-      overlay.innerHTML = `
-        <img src="img/corpse.png" alt="rosto vermelho" style="width:70vh;max-width:800px;opacity:0.95;filter:contrast(1.4) saturate(1.6) drop-shadow(0 12px 40px rgba(120,0,0,0.6));"/>
-      `;
+      overlay.innerHTML = `\n        <img src="img/corpse.png" alt="rosto vermelho" style="width:70vh;max-width:800px;opacity:0.95;filter:contrast(1.4) saturate(1.6) drop-shadow(0 12px 40px rgba(120,0,0,0.6));"/>\n      `;
       document.body.appendChild(overlay);
 
       // tornar tudo intensamente vermelho
+      const prevBg = document.body.style.background;
       document.documentElement.style.background = '#300000';
       document.body.style.transition='filter .2s ease, background .15s ease';
       document.body.style.filter='grayscale(0) contrast(1.4) saturate(1.6)';
@@ -190,7 +196,6 @@
       try{
         const audio = new Audio('audio/BLINK.mp3');
         audio.volume = 1.0;
-        // play retorna uma promise em alguns navegadores
         audio.play().catch(()=>{});
       }catch(e){console.warn('Audio failed',e)}
 
@@ -199,17 +204,6 @@
         window.location.href = 'https://relembre.invalid';
       },1000);
     }
-
-    enterBtn.addEventListener('click', ()=>{
-      const v = normalizeText(pwInput.value || '');
-      if(v === expected){
-        showNext();
-      }else{
-        triggerFail();
-      }
-    });
-
-    pwInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ enterBtn.click(); } });
 
     /* ********** fundo com ruído ********** */
     const noiseCanvas = document.querySelector('canvas.bgNoise');
@@ -254,23 +248,23 @@
       noiseOffset += 1;
     }
 
-    /* Partículas (neve suave) */
+    /* Partículas (neve suave, agora mais visíveis) */
     const particles = [];
     function initParticles(){
       particles.length = 0;
-      for(let i=0;i<120;i++){
-        particles.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight, r:Math.random()*1.6+0.2, s:Math.random()*0.4+0.1});
+      for(let i=0;i<180;i++){
+        particles.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight, r:Math.random()*1.8+0.6, s:Math.random()*0.6+0.15});
       }
     }
     initParticles();
 
     function updateParticles(){
       pct.clearRect(0,0,innerWidth,innerHeight);
-      pct.globalAlpha = 0.9;
+      pct.globalAlpha = 0.95;
       for(const p of particles){
-        p.y += p.s; p.x += Math.sin(p.y*0.01 + p.x*0.01)*0.2;
+        p.y += p.s; p.x += Math.sin(p.y*0.01 + p.x*0.01)*0.25;
         if(p.y > innerHeight + 20){ p.y = -10; p.x = Math.random()*innerWidth }
-        pct.beginPath(); pct.arc(p.x, p.y, p.r, 0, Math.PI*2); pct.fillStyle = 'rgba(240,240,240,0.06)'; pct.fill();
+        pct.beginPath(); pct.arc(p.x, p.y, p.r, 0, Math.PI*2); pct.fillStyle = 'rgba(240,240,240,0.12)'; pct.fill();
       }
     }
 
@@ -289,7 +283,7 @@
     });
 
     // preencher placeholder com dica em português (não obrigatório, só estética)
-    pwInput.placeholder = '--- senha ---';
+    pwInput.placeholder = '// ??? //';
   </script>
 </body>
 </html>
