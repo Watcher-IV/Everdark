@@ -1,11 +1,273 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zona do Juramento — Entrada</title>
+  <style>
+    /* Reinício de estilos básicos */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      background:#000;
+      color:#bfbfbf; /* cinza, nunca branco */
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      overflow:hidden;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      position:relative;
+    }
+
+    /* Estética de baixa resolução / estilo PS2 */
+    .scene{
+      width:100%;height:100%;
+      display:flex;align-items:center;justify-content:center;
+      filter:blur(0.6px) contrast(0.95) saturate(0.9);
+      image-rendering:pixelated;
+    }
+
+    /* Painel central */
+    .panel{
+      width:min(740px,92%);
+      min-height:120px;
+      padding:32px;
+      border-radius:10px;
+      backdrop-filter: blur(2px);
+      background:rgba(0,0,0,0.25);
+      border:1px solid rgba(255,255,255,0.03);
+      box-shadow:0 8px 40px rgba(0,0,0,0.6);
+      display:flex;align-items:center;justify-content:center;flex-direction:column;
+    }
+
+    .hint{color:#9e9e9e;margin-bottom:18px;font-size:14px}
+
+    form{width:100%;display:flex;gap:12px;align-items:center;justify-content:center}
+    input[type="text"]{
+      width:100%;max-width:560px;padding:14px 18px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);
+      background:rgba(0,0,0,0.45);color:#cfcfcf;font-size:16px;outline:none;text-align:center;
+      transition:all .12s ease-in-out;font-family:inherit
+    }
+    input[type="text"]::placeholder{color:#8f8f8f}
+    button{
+      padding:12px 18px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);
+      background:rgba(255,255,255,0.02);color:#d3d3d3;cursor:pointer;font-weight:600
+    }
+    button:active{transform:translateY(1px)}
+
+    /* Próxima página (inicialmente oculta) */
+    .next-page{display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+    .next-page h1{font-size:28px;margin-bottom:8px}
+    .next-page p{max-width:700px;text-align:center;color:#b9b9b9}
+
+    /* Canvases de fundo empilhados */
+    canvas.bgNoise, canvas.particles{position:fixed;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+    /* Linhas de varredura (scanlines) */
+    .scanlines:before{
+      content:"";position:fixed;left:0;top:0;width:100%;height:100%;z-index:1;pointer-events:none;
+      background-image:repeating-linear-gradient( to bottom, rgba(255,255,255,0.02) 0px, rgba(0,0,0,0.0) 1px );
+      background-size:100% 4px;mix-blend-mode:overlay;opacity:0.4;animation:scanMove 6s linear infinite;
+    }
+    @keyframes scanMove{from{background-position:0 0}to{background-position:0 400px}}
+
+    /* Leves linhas de glitch horizontal */
+    .glitchLine{position:fixed;left:-20%;width:140%;height:2px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.06),rgba(255,255,255,0.02));z-index:2;opacity:0.18;transform:translateY(10vh);animation:glitch 8s infinite}
+    @keyframes glitch{0%{transform:translateY(5vh)}50%{transform:translateY(65vh)}100%{transform:translateY(5vh)}}
+
+    /* Camada vermelha exibida no erro */
+    .fail-overlay{position:fixed;inset:0;background:rgba(120,0,0,0.96);z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column}
+    .fail-overlay svg{width:48vh;max-width:680px;opacity:0.95;filter:contrast(1.4) saturate(1.6) drop-shadow(0 12px 40px rgba(120,0,0,0.6))}
+
+    /* Aparência da página 404 */
+    .dead{background:#0f0000;color:#ffb3b3;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;flex-direction:column}
+    .dead h1{font-size:72px;letter-spacing:6px}
+    .dead p{margin-top:12px;color:#ffdede}
+
+    /* Acessibilidade: reduzir movimento */
+    @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+  </style>
 </head>
 <body>
-    
+  <!-- background canvases -->
+  <canvas class="bgNoise"></canvas>
+  <canvas class="particles"></canvas>
+
+  <div class="glitchLine" style="animation-duration:7.5s"></div>
+  <div class="glitchLine" style="animation-duration:9.3s;opacity:0.12;transform:translateY(35vh)"></div>
+
+  <div class="scene scanlines" id="scene" style="z-index:3">
+    <div class="panel" id="panel">
+      <div class="hint">Digite a senha para prosseguir</div>
+      <form id="pwform" autocomplete="off" onsubmit="return false;">
+        <input id="pw" type="text" placeholder="_ under oath..." aria-label="senha" />
+        <button id="enter">Entrar</button>
+      </form>
+      <div style="height:6px"></div>
+      <div style="font-size:12px;color:#9a9a9a;opacity:0.9">A estética é intencionalmente degradada.</div>
+    </div>
+
+    <div class="next-page" id="next">
+      <h1>Permissão Concedida</h1>
+      <p>Você pronunciou o juramento. A próxima página contêm o que foi prometido — mas nada aqui é seguro.</p>
+    </div>
+  </div>
+
+  <script>
+    /* Funções auxiliares para normalização */
+    function normalizeText(s){
+      try{
+        return s.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[\u0300-\u036f]/g,'');
+      }catch(e){
+        // fallback se o ambiente não suportar a propriedade Unicode em regex
+        return s.trim().toLowerCase();
+      }
+    }
+
+    const expected = normalizeText('sob o juramento do todo sombrio');
+
+    const pwInput = document.getElementById('pw');
+    const enterBtn = document.getElementById('enter');
+    const panel = document.getElementById('panel');
+    const next = document.getElementById('next');
+
+    function showNext(){
+      // Exibe a "próxima página" localmente (sem redirecionar)
+      panel.style.transition = 'opacity 220ms ease, transform 220ms ease';
+      panel.style.opacity = 0;panel.style.transform='translateY(-8px)';
+      setTimeout(()=>{panel.style.display='none';next.style.display='flex';},240);
+    }
+
+    function triggerFail(){
+      // criar overlay com rosto vermelho e tocar som estranho de 1s
+      const overlay = document.createElement('div');overlay.className='fail-overlay';
+      overlay.innerHTML = `\n        <svg viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">\n          <defs>\n            <filter id=\"grain\">\n              <feTurbulence baseFrequency=\"0.9\" numOctaves=\"2\" stitchTiles=\"stitch\"/>\n              <feColorMatrix type=\"saturate\" values=\"0.2\"/>\n            </filter>\n          </defs>\n          <rect width=\"100%\" height=\"100%\" fill=\"#6b0000\" />\n          <g transform=\"translate(0,0)\">\n            <ellipse cx=\"256\" cy=\"256\" rx=\"220\" ry=\"250\" fill=\"#a30000\"/>\n            <circle cx=\"175\" cy=\"210\" r=\"30\" fill=\"#3b0000\"/>\n            <circle cx=\"337\" cy=\"210\" r=\"30\" fill=\"#3b0000\"/>\n            <path d=\"M160 340 Q256 400 352 340\" stroke=\"#3b0000\" stroke-width=\"22\" fill=\"none\" stroke-linecap=\"round\"/>\n            <g style=\"mix-blend-mode:screen;opacity:0.08\">\n              <rect x=\"0\" y=\"0\" width=\"100%\" height=\"100%\" filter=\"url(#grain)\" />\n            </g>\n          </g>\n        </svg>\n      `;
+      document.body.appendChild(overlay);
+
+      // Tornar tudo intensamente vermelho
+      const prevBg = document.body.style.background;
+      document.documentElement.style.background = '#300000';
+      document.body.style.transition='filter .2s ease, background .15s ease';
+      document.body.style.filter='grayscale(0) contrast(1.4) saturate(1.6)';
+
+      // Reproduzir som estranho de 1s gerado com WebAudio
+      try{
+        const ctx = new (window.AudioContext||window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        const b = ctx.createBiquadFilter();
+        const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 1, ctx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for(let i=0;i<data.length;i++){data[i] = (Math.random()*2-1)*0.8}
+        const noise = ctx.createBufferSource();noise.buffer = noiseBuffer;noise.loop=false;
+        b.type='bandpass';b.frequency.value=180; b.Q.value=0.4;
+        g.gain.value = 0.8;
+        noise.connect(b);b.connect(g);g.connect(ctx.destination);
+        noise.start(0);
+        // tom curto sobreposto
+        o.type='sawtooth';o.frequency.setValueAtTime(220,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(1200,ctx.currentTime+0.8);
+        o.connect(g);o.start();
+        // parar após 1s
+        setTimeout(()=>{try{o.stop();noise.stop();ctx.close()}catch(e){}},1000);
+      }catch(e){console.warn('Audio failed',e)}
+
+      // Após 1s, redirecionar para um site inexistente chamado "relembre" (gera 404)
+      setTimeout(()=>{
+        // limpar conteúdo local para garantir o redirecionamento
+        // usar domínio .invalid garante que será resolvido como inválido em muitos ambientes
+        window.location.href = 'https://relembre.invalid';
+      },1000);
+    }
+
+    enterBtn.addEventListener('click', ()=>{
+      const v = normalizeText(pwInput.value || '');
+      if(v === expected){
+        showNext();
+      }else{
+        triggerFail();
+      }
+    });
+
+    pwInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ enterBtn.click(); } });
+
+    /* ********** fundo com ruído ********** */
+    const noiseCanvas = document.querySelector('canvas.bgNoise');
+    const pCanvas = document.querySelector('canvas.particles');
+    const nctx = noiseCanvas.getContext('2d');
+    const pct = pCanvas.getContext('2d');
+
+    function resize(){
+      // trabalhar em CSS pixels — imageData usa largura/altura em CSS pixels
+      const w = innerWidth;
+      const h = innerHeight;
+      noiseCanvas.width = w * devicePixelRatio;
+      noiseCanvas.height = h * devicePixelRatio;
+      noiseCanvas.style.width = w + 'px';
+      noiseCanvas.style.height = h + 'px';
+      pCanvas.width = w * devicePixelRatio;
+      pCanvas.height = h * devicePixelRatio;
+      pCanvas.style.width = w + 'px';
+      pCanvas.style.height = h + 'px';
+      nctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+      pct.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    }
+    addEventListener('resize', ()=>{resize();});
+    resize();
+
+    // desenhar ruído sutil em movimento
+    let noiseOffset = 0;
+    function drawNoise(){
+      const w = innerWidth;
+      const h = innerHeight;
+      // criar imageData no tamanho CSS (não em device pixels) para evitar uso excessivo de memória
+      const imgData = nctx.createImageData(w, h);
+      const data = imgData.data;
+      for(let i=0;i<w*h;i++){
+        const v = (Math.random()*40 - 10) | 0; // ruído sutil
+        const base = 20 + v + Math.sin((i+noiseOffset)/1000)*8;
+        const idx = i*4;
+        data[idx] = base; data[idx+1] = base; data[idx+2] = base; data[idx+3] = 18; // muito transparente
+      }
+      // desenhar imageData escalado automaticamente pelo transform aplicado
+      nctx.putImageData(imgData,0,0);
+      noiseOffset += 1;
+    }
+
+    /* Partículas (neve suave) */
+    const particles = [];
+    function initParticles(){
+      particles.length = 0;
+      for(let i=0;i<120;i++){
+        particles.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight, r:Math.random()*1.6+0.2, s:Math.random()*0.4+0.1});
+      }
+    }
+    initParticles();
+
+    function updateParticles(){
+      pct.clearRect(0,0,innerWidth,innerHeight);
+      pct.globalAlpha = 0.9;
+      for(const p of particles){
+        p.y += p.s; p.x += Math.sin(p.y*0.01 + p.x*0.01)*0.2;
+        if(p.y > innerHeight + 20){ p.y = -10; p.x = Math.random()*innerWidth }
+        pct.beginPath(); pct.arc(p.x, p.y, p.r, 0, Math.PI*2); pct.fillStyle = 'rgba(240,240,240,0.06)'; pct.fill();
+      }
+    }
+
+    /* Loop de animação */
+    let raf;
+    function tick(){
+      drawNoise();
+      updateParticles();
+      raf = requestAnimationFrame(tick);
+    }
+    tick();
+
+    // fallback de performance caso a aba fique oculta
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.hidden){ cancelAnimationFrame(raf); } else { tick(); }
+    });
+
+    // preencher placeholder com dica em português (não obrigatório, só estética)
+    pwInput.placeholder = '--- senha ---';
+  </script>
 </body>
 </html>
