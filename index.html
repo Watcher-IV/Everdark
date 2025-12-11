@@ -138,42 +138,28 @@
     }
 
     function triggerFail(){
-      // criar overlay com rosto vermelho e tocar som estranho de 1s
+      // overlay agora usa imagem externa (substitua por img/rosto.png)
       const overlay = document.createElement('div');overlay.className='fail-overlay';
-      overlay.innerHTML = `\n        <svg viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">\n          <defs>\n            <filter id=\"grain\">\n              <feTurbulence baseFrequency=\"0.9\" numOctaves=\"2\" stitchTiles=\"stitch\"/>\n              <feColorMatrix type=\"saturate\" values=\"0.2\"/>\n            </filter>\n          </defs>\n          <rect width=\"100%\" height=\"100%\" fill=\"#6b0000\" />\n          <g transform=\"translate(0,0)\">\n            <ellipse cx=\"256\" cy=\"256\" rx=\"220\" ry=\"250\" fill=\"#a30000\"/>\n            <circle cx=\"175\" cy=\"210\" r=\"30\" fill=\"#3b0000\"/>\n            <circle cx=\"337\" cy=\"210\" r=\"30\" fill=\"#3b0000\"/>\n            <path d=\"M160 340 Q256 400 352 340\" stroke=\"#3b0000\" stroke-width=\"22\" fill=\"none\" stroke-linecap=\"round\"/>\n            <g style=\"mix-blend-mode:screen;opacity:0.08\">\n              <rect x=\"0\" y=\"0\" width=\"100%\" height=\"100%\" filter=\"url(#grain)\" />\n            </g>\n          </g>\n        </svg>\n      `;
+      overlay.innerHTML = `
+        <img src="img/rosto.png" alt="rosto vermelho" style="width:70vh;max-width:800px;opacity:0.95;filter:contrast(1.4) saturate(1.6) drop-shadow(0 12px 40px rgba(120,0,0,0.6));"/>
+      `;
       document.body.appendChild(overlay);
 
-      // Tornar tudo intensamente vermelho
-      const prevBg = document.body.style.background;
+      // tornar tudo intensamente vermelho
       document.documentElement.style.background = '#300000';
       document.body.style.transition='filter .2s ease, background .15s ease';
       document.body.style.filter='grayscale(0) contrast(1.4) saturate(1.6)';
 
-      // Reproduzir som estranho de 1s gerado com WebAudio
+      // tocar arquivo de áudio externo (substitua por audio/erro.mp3)
       try{
-        const ctx = new (window.AudioContext||window.webkitAudioContext)();
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        const b = ctx.createBiquadFilter();
-        const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 1, ctx.sampleRate);
-        const data = noiseBuffer.getChannelData(0);
-        for(let i=0;i<data.length;i++){data[i] = (Math.random()*2-1)*0.8}
-        const noise = ctx.createBufferSource();noise.buffer = noiseBuffer;noise.loop=false;
-        b.type='bandpass';b.frequency.value=180; b.Q.value=0.4;
-        g.gain.value = 0.8;
-        noise.connect(b);b.connect(g);g.connect(ctx.destination);
-        noise.start(0);
-        // tom curto sobreposto
-        o.type='sawtooth';o.frequency.setValueAtTime(220,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(1200,ctx.currentTime+0.8);
-        o.connect(g);o.start();
-        // parar após 1s
-        setTimeout(()=>{try{o.stop();noise.stop();ctx.close()}catch(e){}},1000);
+        const audio = new Audio('audio/BLINK.mp3');
+        audio.volume = 1.0;
+        // play retorna uma promise em alguns navegadores
+        audio.play().catch(()=>{});
       }catch(e){console.warn('Audio failed',e)}
 
       // Após 1s, redirecionar para um site inexistente chamado "relembre" (gera 404)
       setTimeout(()=>{
-        // limpar conteúdo local para garantir o redirecionamento
-        // usar domínio .invalid garante que será resolvido como inválido em muitos ambientes
         window.location.href = 'https://relembre.invalid';
       },1000);
     }
