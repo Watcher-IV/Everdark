@@ -71,7 +71,7 @@
         // após alguns segundos na tela, redirecionar para Spiralum.html
         const redirectDelay = 2000; // ms após a mensagem aparecer
         setTimeout(()=>{
-          window.location.href = 'Spiralum.html';
+          window.location.href = 'spiralum.html';
         }, redirectDelay);
 
       }, fadeDuration);
