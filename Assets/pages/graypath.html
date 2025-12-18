@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Zona do Juramento — Entrada</title>
+  <!-- Fonte gótica (fallbacks incluídos) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="CSS/graypath.css">
+</head>
+<body>
+  <!-- background canvases -->
+  <canvas class="bgNoise"></canvas>
+  <canvas class="particles"></canvas>
+
+  <div class="glitchLine" style="animation-duration:7.5s"></div>
+  <div class="glitchLine" style="animation-duration:9.3s;opacity:0.12;transform:translateY(35vh)"></div>
+
+  <div class="scene scanlines" id="scene" style="z-index:3">
+    <div class="panel" id="panel">
+      <form id="pwform" autocomplete="off" onsubmit="return false;">
+        <input id="pw" type="text" placeholder="// ??? //" aria-label="senha" />
+      </form>
+    </div>
+
+    <div class="next-page" id="next">
+      <h1>Permissão Concedida</h1>
+      <p>Você pronunciou o juramento. A próxima página contêm o que foi prometido — mas nada aqui é seguro.</p>
+    </div>
+  </div>
+<script src="JS/graypath.js"></script>
+</body>
+</html>
