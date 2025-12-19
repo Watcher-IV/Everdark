@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SYNC</title>
+<style>
+    body {
+        margin: 0;
+        background: black;
+        color: #e6e6e6;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 16px;
+        overflow: hidden;
+    }
+
+    #terminal {
+        padding: 20px;
+        white-space: pre-wrap;
+        line-height: 1.4;
+    }
+
+    .green {
+        color: #00ff4c;
+        font-weight: bold;
+    }
+
+    .cursor::after {
+        content: "█";
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+    }
+
+    .accept {
+        color: #00ff4c;
+        font-weight: bold;
+        cursor: pointer;
+        animation: pulse 1.2s infinite;
+    }
+
+    .accept:hover {
+        text-shadow: 0 0 8px #00ff4c;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+</style>
+</head>
+<body>
+
+<div id="terminal" class="cursor"></div>
+
+<script>
+const terminal = document.getElementById("terminal");
+
+const CLIENT_ID = "1451271302496387123";
+
+const REDIRECT_URI = encodeURIComponent(
+  "https://watcher-iv.github.io/Everdark"
+);
+
+const DISCORD_OAUTH_URL = `https://discord.com/oauth2/authorize
+?client_id=${CLIENT_ID}
+&response_type=code
+&redirect_uri=${REDIRECT_URI}
+&scope=identify`.replace(/\s/g, "");
+  
+const lines = [
+    "INITIALIZING EXTERNAL INTERFACE...",
+    "ACCESSING LOCAL ENVIRONMENT",
+    "READING MEMORY BLOCKS",
+    "OVERRIDING INPUT CHANNELS",
+    "",
+    "WARNING: UNEXPECTED SIGNAL DETECTED",
+    "TRACE ROUTE ESTABLISHED",
+    "",
+    "SYNCING IDENTITY...",
+    "",
+    ">>> ACCEPT <<<",
+    "",
+    "HANDSHAKE PENDING",
+    "",
+    "DO NOT CLOSE THIS WINDOW"
+];
+
+let lineIndex = 0;
+let charIndex = 0;
+
+function typeLine() {
+    if (lineIndex >= lines.length) return;
+
+    const line = lines[lineIndex];
+    const isAccept = line.includes("ACCEPT");
+
+    if (charIndex < line.length) {
+        terminal.classList.remove("cursor");
+
+        const char = line.charAt(charIndex);
+
+        if (isAccept) {
+            terminal.innerHTML += `<span class="accept">${char}</span>`;
+        } else {
+            terminal.innerHTML += char;
+        }
+
+        charIndex++;
+        setTimeout(typeLine, 30);
+    } else {
+        terminal.innerHTML += "\n";
+        charIndex = 0;
+        lineIndex++;
+
+        setTimeout(() => {
+            terminal.classList.add("cursor");
+            typeLine();
+        }, isAccept ? 1200 : 400);
+    }
+}
+
+setTimeout(typeLine, 800);
+
+// Delegação de clique
+terminal.addEventListener("click", (e) => {
+    if (e.target.classList.contains("accept")) {
+        terminal.innerHTML += "\n\nACCEPTED.\n";
+        setTimeout(() => {
+            window.location.href = DISCORD_OAUTH_URL;
+        }, 600);
+    }
+});
+</script>
+
+</body>
+</html>
