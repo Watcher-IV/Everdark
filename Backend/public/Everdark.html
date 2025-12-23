@@ -57,19 +57,6 @@
 <div id="terminal" class="cursor"></div>
 
 <script>
-const terminal = document.getElementById("terminal");
-
-const CLIENT_ID = "1451271302496387123";
-
-const REDIRECT_URI = encodeURIComponent(
-  "https://watcher-iv.github.io/Everdark/FrontEnd/pages/graypath.html"
-);
-
-const DISCORD_OAUTH_URL = `https://discord.com/oauth2/authorize
-?client_id=${CLIENT_ID}
-&response_type=code
-&redirect_uri=${REDIRECT_URI}
-&scope=identify`.replace(/\s/g, "");
   
 const lines = [
     "INITIALIZING EXTERNAL INTERFACE...",
@@ -130,7 +117,7 @@ terminal.addEventListener("click", (e) => {
     if (e.target.classList.contains("accept")) {
         terminal.innerHTML += "\n\nACCEPTED.\n";
         setTimeout(() => {
-            window.location.href = DISCORD_OAUTH_URL;
+            window.location.href = "/login";
         }, 600);
     }
 });
