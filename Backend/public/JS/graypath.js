@@ -1,4 +1,21 @@
-    /* Funções auxiliares para normalização */
+/* ID's */
+  const params = new URLSearchParams(window.location.search);
+  const discordId = params.get("id");
+
+  console.log("ID logado:", discordId);
+
+  /* Mapa de destinos por ID */
+  const DESTINOS = {
+  "914172777802653726": "spiralum.html",
+  "604660661661728798": "Teste2.html",
+  "987654321098765432": "void.html"
+  };
+
+  function getDestinoById(id){
+  return DESTINOS[id] || null;
+  }
+
+/* Funções auxiliares para normalização */
     function normalizeText(s){
       try{
         return s.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[\u0300-\u036f]/g,'');
@@ -8,11 +25,11 @@
       }
     }
 
-    window.addEventListener("pageshow", function (event) {
-  if (event.persisted) {
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
     location.reload();
-  }
-});
+    }
+  });
 
     const expected = normalizeText('sob o juramento do todo sombrio');
 
@@ -35,47 +52,53 @@
     // garantir suporte a Enter em mobile e desktop
     pwInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.keyCode === 13){ e.preventDefault(); checkPassword(); } });
 
-    function showNext(){
-      // Fade out lento (4.5s) do campo; depois mostra tela preta com partículas ao fundo e a frase
-      const fadeDuration = 4500; // ms (4.5s)
-      panel.style.transition = `opacity ${fadeDuration}ms ease, transform ${fadeDuration}ms ease`;
-      panel.style.opacity = 0;
-      panel.style.transform = 'translateY(-20px)';
 
-      setTimeout(()=>{
-        // esconder o painel de input
-        panel.style.display = 'none';
+  function showNext(){
+  const destino = getDestinoById(discordId);
 
-        // criar elemento final que mostra a frase sobre uma tela preta translúcida
-        const final = document.createElement('div');
-        final.id = 'finalMessage';
-        Object.assign(final.style, {
-          position: 'fixed',
-          left: '0', top: '0', right: '0', bottom: '0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-          pointerEvents: 'none',
-          fontFamily: 'inherit',
-          color: '#bfbfbf',
-          fontSize: '34px',
-          textAlign: 'center',
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(1px)'
-        });
+  if(!destino){
+    document.body.innerHTML = "ACCESS DENIED";
+    return;
+  }
 
-        final.textContent = 'Relembre, me liberte';
-        document.body.appendChild(final);
+  const fadeDuration = 4500; // 4.5s
+  panel.style.transition = `opacity ${fadeDuration}ms ease, transform ${fadeDuration}ms ease`;
+  panel.style.opacity = 0;
+  panel.style.transform = 'translateY(-20px)';
 
-        // após alguns segundos na tela, redirecionar para Spiralum.html
-        const redirectDelay = 2000; // ms após a mensagem aparecer
-        setTimeout(()=>{
-          window.location.href = 'spiralum.html';
-        }, redirectDelay);
+  setTimeout(()=>{
+  panel.style.display = 'none';
 
-      }, fadeDuration);
-    }
+  const final = document.createElement('div');
+  final.id = 'finalMessage';
+  Object.assign(final.style, {
+    position: 'fixed',
+    left: '0',
+    top: '0',
+    right: '0',
+    bottom: '0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50,
+    pointerEvents: 'none',
+    fontFamily: 'inherit',
+    color: '#bfbfbf',
+    fontSize: '34px',
+    textAlign: 'center',
+    background: 'rgba(0,0,0,0.85)',
+    backdropFilter: 'blur(1px)'
+  });
+
+    final.textContent = 'Relembre, me liberte';
+    document.body.appendChild(final);
+
+    setTimeout(()=>{
+      window.location.href = destino;
+    }, 2000);
+
+  }, fadeDuration);
+}
 
     function triggerFail(){
       // overlay agora usa imagem externa
